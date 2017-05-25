@@ -35,7 +35,7 @@ class Util
     protected static function _checkSignature($body, $token)
     {
         $new_sig = md5($token . $body['nonce'] . $body['msg']);
-        $new_sig = str_replace('+', ' ', base64_encode(pack('H*', strtoupper($new_sig))));
+        $new_sig = rtrim(str_replace('+', ' ', base64_encode(pack('H*', strtoupper($new_sig)))),'=');
         if ($new_sig == $body['signature']) {
             return $body['msg'];
         } else {
