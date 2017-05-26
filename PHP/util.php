@@ -36,7 +36,7 @@ class Util
     {
         $new_sig = md5($token . $body['nonce'] . $body['msg']);
         $new_sig = rtrim(str_replace('+', ' ', base64_encode(pack('H*', strtoupper($new_sig)))),'=');
-        if ($new_sig == $body['signature']) {
+        if ($new_sig == rtrim($body['signature'],'=')) {
             return $body['msg'];
         } else {
             return FALSE;
@@ -50,8 +50,8 @@ class Util
     protected static function _handleRuleMsg($body, $token)
     {
         $new_sig = md5($token . $body['nonce'] . json_encode($body['msg']));
-        $new_sig = base64_encode(pack('H*', strtoupper($new_sig)));
-        if ($new_sig == $body['msg_signature']) {
+        $new_sig = rtrim(base64_encode(pack('H*', strtoupper($new_sig))),'=');
+        if ($new_sig == rtrim($body['msg_signature'],'=')) {
             return $body['msg'];
         } else {
             return FALSE;
