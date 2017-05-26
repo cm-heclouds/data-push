@@ -51,7 +51,6 @@ public class Util {
         System.arraycopy(nonce.getBytes(), 0, paramB, token.length(), 8);
         System.arraycopy(msg.getBytes(), 0, paramB, token.length() + 8, msg.length());
         String sig =  com.sun.org.apache.xerces.internal.impl.dv.util.Base64.encode(mdInst.digest(paramB));
-        logger.info("signature ----{}",signature);
         logger.info("url&token validation: result {},  detail receive:{} calculate:{}", sig.equals(signature.replace(' ','+')),signature,sig);
         return sig.equals(signature.replace(' ','+'));
     }
