@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
 import java.security.*;
 
 
@@ -43,15 +44,16 @@ public class Util {
      * @param token OneNet平台配置页面token的值
      * @return token检验成功返回true；token校验失败返回false
      */
-    public static boolean checkToken(String msg,String nonce,String signature, String token){
+    public static boolean checkToken(String msg,String nonce,String signature, String token) throws UnsupportedEncodingException {
 
         byte[] paramB = new byte[token.length() + 8 + msg.length()];
         System.arraycopy(token.getBytes(), 0, paramB, 0, token.length());
         System.arraycopy(nonce.getBytes(), 0, paramB, token.length(), 8);
         System.arraycopy(msg.getBytes(), 0, paramB, token.length() + 8, msg.length());
-        String sig = Base64.encodeBase64URLSafeString(mdInst.digest(paramB));
-        logger.info("url&token validation: result {},  detail receive:{} calculate:{}", sig.equals(signature),signature,sig);
-        return sig.equals(signature);
+        String sig =  com.sun.org.apache.xerces.internal.impl.dv.util.Base64.encode(mdInst.digest(paramB));
+        logger.info("signature ----{}",signature);
+        logger.info("url&token validation: result {},  detail receive:{} calculate:{}", sig.equals(signature.replace(' ','+')),signature,sig);
+        return sig.equals(signature.replace(' ','+'));
     }
 
     /**
