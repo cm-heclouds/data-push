@@ -12,7 +12,7 @@ namespace OneNETDataReceiver.Controllers
     public class HomeController : Controller
     {
         private static String token = "123";//在OneNET配置的token
-        private static String aeskey = "";//在OneNET配置时“消息加解密方式”选择“安全模式”下的EncodingAESKey，可选
+        private static String aeskey = "";//在OneNET配置时“消息加解密方式”选择“安全模式”下的EncodingAESKey，安全模式下必填
 
         public ActionResult Index()
         {
@@ -27,45 +27,45 @@ namespace OneNETDataReceiver.Controllers
             string body = new StreamReader(req).ReadToEnd();
 
             //解析数据推送请求，非加密模式
-            //var obj = Util.resolveBody(body, false);
-            //Console.WriteLine("data receive:  body --- " + obj);
-            //if (obj != null)
-            //{
-            //    var dataRight = Util.checkSignature(obj, token);
-            //    if (dataRight)
-            //    {
-            //        Console.WriteLine("data receive: content" + obj.ToString());
-            //    }
-            //    else
-            //    {
-            //        Console.WriteLine("data receive: signature error");
-            //    }
-            //}
-            //else
-            //{
-            //    Console.WriteLine("data receive: body empty error");
-            //}
-
-            // 解析数据推送请求，加密模式
-            Util.BodyObj obj1 = Util.resolveBody(body, true);
-            Console.WriteLine("data receive:  body --- " + obj1);
-            if (obj1 != null)
+            var obj = Util.resolveBody(body, false);
+            Console.WriteLine("data receive:  body --- " + obj);
+            if (obj != null)
             {
-                bool dataRight1 = Util.checkSignature(obj1, token);
-                if (dataRight1)
+                var dataRight = Util.checkSignature(obj, token);
+                if (dataRight)
                 {
-                    String msg = Util.decryptMsg(obj1, aeskey);
-                    Console.WriteLine("data receive: content" + msg);
+                    Console.WriteLine("data receive: content" + obj.ToString());
                 }
                 else
                 {
-                    Console.WriteLine("data receive:  signature error ");
+                    Console.WriteLine("data receive: signature error");
                 }
             }
             else
             {
                 Console.WriteLine("data receive: body empty error");
             }
+
+            // 解析数据推送请求，加密模式
+            //Util.BodyObj obj1 = Util.resolveBody(body, true);
+            //Console.WriteLine("data receive:  body --- " + obj1);
+            //if (obj1 != null)
+            //{
+            //    bool dataRight1 = Util.checkSignature(obj1, token);
+            //    if (dataRight1)
+            //    {
+            //        String msg = Util.decryptMsg(obj1, aeskey);
+            //        Console.WriteLine("data receive: content" + msg);
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine("data receive:  signature error ");
+            //    }
+            //}
+            //else
+            //{
+            //    Console.WriteLine("data receive: body empty error");
+            //}
             
             return "ok";
         }
