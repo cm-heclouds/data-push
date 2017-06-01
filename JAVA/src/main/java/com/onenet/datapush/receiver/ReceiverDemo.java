@@ -24,8 +24,8 @@ import java.security.NoSuchAlgorithmException;
 @EnableAutoConfiguration
 public class ReceiverDemo {
 
-    private static String token ="abcdefghijkmlnopqrstuvwxyz";//用户自定义token和OneNet第三方平台配置里的token一直
-    private static String aeskey ="whBx2ZwAU5LOHVimPj1MPx56QRe3OsGGWRe4dr17crV";//aeskey和OneNet第三方平台配置里的token一直
+    private static String token ="abcdefghijkmlnopqrstuvwxyz";//用户自定义token和OneNet第三方平台配置里的token一致
+    private static String aeskey ="whBx2ZwAU5LOHVimPj1MPx56QRe3OsGGWRe4dr17crV";//aeskey和OneNet第三方平台配置里的token一致
 
     private static Logger logger = LoggerFactory.getLogger(ReceiverDemo.class);
     /**
