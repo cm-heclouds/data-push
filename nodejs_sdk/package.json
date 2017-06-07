@@ -1,0 +1,12 @@
+{
+  "name": "OneNET_nodejs_sdk",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {},
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "crypto": "0.0.3",
+    "express": "^4.15.3",
+    "http": "0.0.0"
+  }
+}

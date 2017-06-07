@@ -1,0 +1,4 @@
+1、示例运行需要已经安装 node 环境，建议使用 6.9.1 及以上或同等级的node版本
+2、示例自带运行必要的 modules 不需要再进行 npm 相关的安装
+3、直接运行 node data_push_demo.js 命令即可，服务启动后提示 “Server listening at port 3000”
+
