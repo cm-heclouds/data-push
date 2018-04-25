@@ -105,7 +105,7 @@ namespace OneNETDataReceiver
 
             public override string ToString()
             {
-                return "{ \"msg\":" + msgStr + "，\"nonce\":" + this.nonce + "，\"signature\":" + this.msgSignature + "}";
+                return "{ \"msg\":" + msgStr + ",\"nonce\":" + this.nonce + ",\"signature\":" + this.msgSignature + "}";
             }
         }
     }
