@@ -69,8 +69,7 @@ public class Util {
         System.arraycopy(token.getBytes(), 0, signature, 0, token.length());
         System.arraycopy(obj.getNonce().getBytes(), 0, signature, token.length(), 8);
         System.arraycopy(obj.getMsg().toString().getBytes(), 0, signature, token.length() + 8, obj.getMsg().toString().length());
-        mdInst.update(signature);
-        String calSig = Base64.encodeBase64String(mdInst.digest());
+        String calSig = Base64.encodeBase64String(mdInst.digest(signature));
         logger.info("check signature: result:{}  receive sig:{},calculate sig: {}",calSig.equals(obj.getMsgSignature()),obj.getMsgSignature(),calSig);
         return calSig.equals(obj.getMsgSignature());
     }
@@ -123,7 +122,7 @@ public class Util {
             if (!jsonMsg.has("msg")) {
                 return null;
             }
-            obj.setMsg(jsonMsg.getJSONObject("msg"));
+            obj.setMsg(jsonMsg.get("msg"));
         }
         return obj;
     }
