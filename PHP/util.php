@@ -49,7 +49,7 @@ class Util
      */
     protected static function _handleRuleMsg($body, $token)
     {
-        $new_sig = md5($token . $body['nonce'] . json_encode($body['msg']));
+        $new_sig = md5($token . $body['nonce'] . json_encode($body['msg'], JSON_UNESCAPED_SLASHES));
         $new_sig = rtrim(base64_encode(pack('H*', strtoupper($new_sig))),'=');
         if ($new_sig == rtrim($body['msg_signature'],'=')) {
             return $body['msg'];
