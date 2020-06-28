@@ -1,6 +1,5 @@
 package com.onenet.datapush.receiver;
 
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -11,12 +10,14 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.security.*;
+import java.util.Base64;
 
 
 /**
  * 功能描述: OneNet数据推送接收程序工具类。
  *
  * Created by Roy on 2017/5/17.
+ * Updated by wjl on 2020/6/10.
  *
  */
 public class Util {
@@ -46,11 +47,12 @@ public class Util {
      */
     public static boolean checkToken(String msg,String nonce,String signature, String token) throws UnsupportedEncodingException {
 
-        byte[] paramB = new byte[token.length() + 8 + msg.length()];
+        int msgLength = msg.getBytes().length;
+        byte[] paramB = new byte[token.length() + 8 + msgLength];
         System.arraycopy(token.getBytes(), 0, paramB, 0, token.length());
         System.arraycopy(nonce.getBytes(), 0, paramB, token.length(), 8);
-        System.arraycopy(msg.getBytes(), 0, paramB, token.length() + 8, msg.length());
-        String sig =  com.sun.org.apache.xerces.internal.impl.dv.util.Base64.encode(mdInst.digest(paramB));
+        System.arraycopy(msg.getBytes(), 0, paramB, token.length() + 8, msgLength);
+        String sig = new String(Base64.getEncoder().encode(mdInst.digest(paramB)));
         logger.info("url&token validation: result {},  detail receive:{} calculate:{}", sig.equals(signature.replace(' ','+')),signature,sig);
         return sig.equals(signature.replace(' ','+'));
     }
@@ -65,19 +67,21 @@ public class Util {
     public static boolean checkSignature(BodyObj obj, String token)  {
         //计算接受到的消息的摘要
         //token长度 + 8B随机字符串长度 + 消息长度
-        byte[] signature = new byte[token.length() + 8 + obj.getMsg().toString().length()];
+        int msgLength = obj.getMsg().getBytes().length;
+        byte[] signature = new byte[token.length() + 8 + msgLength];
         System.arraycopy(token.getBytes(), 0, signature, 0, token.length());
         System.arraycopy(obj.getNonce().getBytes(), 0, signature, token.length(), 8);
-        System.arraycopy(obj.getMsg().toString().getBytes(), 0, signature, token.length() + 8, obj.getMsg().toString().length());
-        String calSig = Base64.encodeBase64String(mdInst.digest(signature));
+        System.arraycopy(obj.getMsg().getBytes(), 0, signature, token.length() + 8, msgLength);
+        String calSig = new String(Base64.getEncoder().encode(mdInst.digest(signature)));
         logger.info("check signature: result:{}  receive sig:{},calculate sig: {}",calSig.equals(obj.getMsgSignature()),obj.getMsgSignature(),calSig);
         return calSig.equals(obj.getMsgSignature());
     }
 
     /**
-     *  功能描述 解密消息
-     * @param obj 消息体对象
-     * @param encodeKey OneNet平台第三方平台配置页面为用户生成的AES的BASE64编码格式秘钥
+     * 功能描述 解密消息
+     *
+     * @param encryptMsg 加密消息体对象
+     * @param key        OneNet平台第三方平台配置页面为用户生成的AES的BASE64编码格式秘钥
      * @return
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
@@ -86,67 +90,45 @@ public class Util {
      * @throws BadPaddingException
      * @throws IllegalBlockSizeException
      */
-    public static String decryptMsg(BodyObj obj, String encodeKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        byte[] encMsg = Base64.decodeBase64(obj.getMsg().toString());
-        byte[] aeskey = Base64.decodeBase64(encodeKey + "=");
-        SecretKey secretKey = new SecretKeySpec(aeskey, 0, 32, "AES");
-        Cipher cipher = null;
-        cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(aeskey, 0, 16));
-        byte[] allmsg = cipher.doFinal(encMsg);
-        byte[] msgLenBytes = new byte[4];
-        System.arraycopy(allmsg, 16, msgLenBytes, 0, 4);
-        int msgLen = getMsgLen(msgLenBytes);
-        byte[] msg = new byte[msgLen];
-        System.arraycopy(allmsg, 20, msg, 0, msgLen);
+    public static String decryptMsg(String encryptMsg, byte[] key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        byte[] encMsg = java.util.Base64.getDecoder().decode(encryptMsg);
+        SecretKey secretKey = new SecretKeySpec(key, "AES");
+        //算法/模式/补码方式
+        //CBC模式 向量必须是16个字节
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(key));
+        byte[] msg = cipher.doFinal(encMsg);
         return new String(msg);
     }
 
     /**
      * 功能描述 解析数据推送请求，生成code>BodyObj</code>消息对象
      * @param body 数据推送请求body部分
-     * @param encrypted 表征是否为加密消息
      * @return  生成的<code>BodyObj</code>消息对象
      */
-    public static BodyObj resolveBody(String body, boolean encrypted) {
+    public static BodyObj resolveBody(String body) {
         JSONObject jsonMsg = new JSONObject(body);
         BodyObj obj = new BodyObj();
         obj.setNonce(jsonMsg.getString("nonce"));
-        obj.setMsgSignature(jsonMsg.getString("msg_signature"));
-        if (encrypted) {
-            if (!jsonMsg.has("enc_msg")) {
-                return null;
-            }
-            obj.setMsg(jsonMsg.getString("enc_msg"));
-        } else {
-            if (!jsonMsg.has("msg")) {
-                return null;
-            }
-            obj.setMsg(jsonMsg.get("msg"));
+        obj.setMsgSignature(jsonMsg.getString("signature"));
+        if (!jsonMsg.has("msg")) {
+            return null;
         }
+        obj.setMsg(jsonMsg.getString("msg"));
         return obj;
-    }
-
-    private static int getMsgLen(byte[] arrays) {
-        int len = 0;
-        len += (arrays[0] & 0xFF) << 24;
-        len += (arrays[1] & 0xFF) << 16;
-        len += (arrays[2] & 0xFF) << 8;
-        len += (arrays[3] & 0xFF);
-        return len;
     }
 
 
     public static class BodyObj {
-        private Object msg;
+        private String msg;
         private String nonce;
         private String msgSignature;
 
-        public Object getMsg() {
+        public String getMsg() {
             return msg;
         }
 
-        public void setMsg(Object msg) {
+        public void setMsg(String msg) {
             this.msg = msg;
         }
 

@@ -2,9 +2,9 @@ package com.onenet.datapush.receiver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.crypto.BadPaddingException;
@@ -19,13 +19,16 @@ import java.security.NoSuchAlgorithmException;
  * 数据接收程序接口类
  *
  * Created by Roy on 2017/5/17.
+ * Updated by wjl on 2020/6/10.
+ *
  */
-@Controller
+//@Controller
+@RestController
 @EnableAutoConfiguration
 public class ReceiverDemo {
 
-    private static String token ="abcdefghijkmlnopqrstuvwxyz";//用户自定义token和OneNet第三方平台配置里的token一致
-    private static String aeskey ="whBx2ZwAU5LOHVimPj1MPx56QRe3OsGGWRe4dr17crV";//aeskey和OneNet第三方平台配置里的token一致
+    private static String token ="5ec78dbca0db5a7e49b603fe";//用户自定义token和OneNet第三方平台配置里的token一致
+    private static String aeskey ="AAlvB3jc2dlPq2nF";//aeskey和OneNet第三方平台配置里的AesKey一致
 
     private static Logger logger = LoggerFactory.getLogger(ReceiverDemo.class);
     /**
@@ -38,8 +41,7 @@ public class ReceiverDemo {
      * @param body 数据消息
      * @return 任意字符串。OneNet平台接收到http 200的响应，才会认为数据推送成功，否则会重发。
      */
-    @RequestMapping(value = "/receive",method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping("/receive")
     public String receive(@RequestBody String body) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 
         logger.info("data receive:  body String --- " +body);
@@ -48,8 +50,7 @@ public class ReceiverDemo {
          *  如果是明文模式使用以下代码
          **************************************************/
         /*************明文模式  start****************/
-        Util.BodyObj obj = Util.resolveBody(body, false);
-        logger.info("data receive:  body Object --- " +obj);
+        Util.BodyObj obj = Util.resolveBody(body);
         if (obj != null){
             boolean dataRight = Util.checkSignature(obj, token);
             if (dataRight){
@@ -70,12 +71,11 @@ public class ReceiverDemo {
          *  如果是加密模式使用以下代码
          ********************************************************/
         /*************加密模式  start****************/
-//        Util.BodyObj obj1 = Util.resolveBody(body, true);
-//        logger.info("data receive:  body Object--- " +obj1);
+//        Util.BodyObj obj1 = Util.resolveBody(body);
 //        if (obj1 != null){
 //            boolean dataRight1 = Util.checkSignature(obj1, token);
 //            if (dataRight1){
-//                String msg = Util.decryptMsg(obj1, aeskey);
+//                String msg = Util.decryptMsg(obj1.getMsg(), aeskey.getBytes());
 //                logger.info("data receive: content" + msg);
 //            }else {
 //                logger.info("data receive:  signature error " );
@@ -94,15 +94,14 @@ public class ReceiverDemo {
      * @param signature 签名
      * @return msg值
      */
-
-    @RequestMapping(value = "/receive", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping("/receive")
     public String check(@RequestParam(value = "msg") String msg,
                         @RequestParam(value = "nonce") String nonce,
                         @RequestParam(value = "signature") String signature) throws UnsupportedEncodingException {
 
-        logger.info("url&token check: msg:{} nonce{} signature:{}",msg,nonce,signature);
-        if (Util.checkToken(msg,nonce,signature,token)){
+        logger.info("url&token check: msg:{} nonce:{} signature:{}",msg,nonce,signature);
+        logger.info("local token:{},aesKey:{}", token, aeskey);
+        if (Util.checkToken(msg, nonce, signature, token)){
             return msg;
         }else {
             return "error";
