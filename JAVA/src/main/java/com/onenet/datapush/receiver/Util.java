@@ -167,7 +167,7 @@ public class Util {
         }
 
         public String toString(){
-            return "{ \"msg\":"+this.msg+"，\"nonce\":"+this.nonce+"，\"signature\":"+this.msgSignature+"}";
+            return "{ \"msg\":"+this.msg+",\"nonce\":"+this.nonce+",\"signature\":"+this.msgSignature+"}";
         }
 
     }
